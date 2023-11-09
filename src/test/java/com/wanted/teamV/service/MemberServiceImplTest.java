@@ -5,6 +5,8 @@ import com.wanted.teamV.dto.req.MemberJoinReqDto;
 import com.wanted.teamV.dto.req.MemberLoginReqDto;
 import com.wanted.teamV.dto.res.MemberTokenResDto;
 import com.wanted.teamV.entity.Member;
+import com.wanted.teamV.exception.CustomException;
+import com.wanted.teamV.exception.ErrorCode;
 import com.wanted.teamV.repository.MemberRepository;
 import com.wanted.teamV.service.impl.MemberServiceImpl;
 import org.junit.jupiter.api.DisplayName;
@@ -64,8 +66,8 @@ public class MemberServiceImplTest {
         when(memberRepository.existsByAccount(anyString())).thenReturn(true);
 
         //when & then
-        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> memberService.join(request));
-        assertEquals(HttpStatus.BAD_REQUEST, runtimeException.getStackTrace());
+        CustomException customException = assertThrows(CustomException.class, () -> memberService.join(request));
+        assertEquals(ErrorCode.DUPLICATE_ACCOUNT, customException.getErrorCode());
     }
 
     @Test
@@ -102,7 +104,7 @@ public class MemberServiceImplTest {
         MemberLoginReqDto request = new MemberLoginReqDto("test1234", "wrongPassword");
 
         //then
-        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> memberService.login(request));
-        assertEquals(HttpStatus.BAD_REQUEST, runtimeException.getStackTrace());
+        CustomException exception = assertThrows(CustomException.class, () -> memberService.login(request));
+        assertEquals(ErrorCode.INVALID_PASSWORD, exception.getErrorCode());
     }
 }

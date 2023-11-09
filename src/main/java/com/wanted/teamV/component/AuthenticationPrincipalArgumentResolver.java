@@ -1,6 +1,8 @@
 package com.wanted.teamV.component;
 
+import com.wanted.teamV.dto.LoginMember;
 import com.wanted.teamV.service.MemberService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
@@ -17,11 +19,15 @@ public class AuthenticationPrincipalArgumentResolver implements HandlerMethodArg
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return false;
+        return parameter.hasParameterAnnotation(AuthenticationPrincipal.class);
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
-        return null;
+    public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
+                                  NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
+        HttpServletRequest request = webRequest.getNativeRequest(HttpServletRequest.class);
+        String accessToken = AuthorizationExtractor.extract(request);
+        Long id = memberService.extractUserId(accessToken);
+        return new LoginMember(id);
     }
 }

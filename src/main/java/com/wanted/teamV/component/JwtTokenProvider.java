@@ -1,5 +1,7 @@
 package com.wanted.teamV.component;
 
+import com.wanted.teamV.exception.CustomException;
+import com.wanted.teamV.exception.ErrorCode;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,9 +52,9 @@ public class JwtTokenProvider {
                     .getExpiration()
                     .before(new Date());
         } catch (ExpiredJwtException ex) {
-            ex.getStackTrace();
+            throw new CustomException(ErrorCode.EXPIRE_TOKEN);
         } catch (JwtException | IllegalArgumentException ex) {
-            ex.getStackTrace();
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
     }
 

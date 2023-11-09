@@ -5,6 +5,8 @@ import com.wanted.teamV.dto.req.MemberJoinReqDto;
 import com.wanted.teamV.dto.req.MemberLoginReqDto;
 import com.wanted.teamV.dto.res.MemberTokenResDto;
 import com.wanted.teamV.entity.Member;
+import com.wanted.teamV.exception.CustomException;
+import com.wanted.teamV.exception.ErrorCode;
 import com.wanted.teamV.repository.MemberRepository;
 import com.wanted.teamV.service.MemberService;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +45,7 @@ public class MemberServiceImpl implements MemberService {
         Member member = memberRepository.getByAccount(memberLoginReqDto.account());
 
         if (!passwordEncoder.matches(memberLoginReqDto.password(), member.getPassword())) {
-            System.out.println("잘못된 비밀번호입니다.");
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
 
         String accessToken = authTokenCreator.createAuthToken(member.getId());
@@ -57,7 +59,7 @@ public class MemberServiceImpl implements MemberService {
 
     private void validateUniqueAccount(String account) {
         if (memberRepository.existsByAccount(account)) {
-            System.out.println("중복된 계정입니다.");
+            throw new CustomException(ErrorCode.DUPLICATE_ACCOUNT);
         }
     }
 }
