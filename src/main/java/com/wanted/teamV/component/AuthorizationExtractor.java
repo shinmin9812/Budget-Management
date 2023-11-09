@@ -1,5 +1,7 @@
 package com.wanted.teamV.component;
 
+import com.wanted.teamV.exception.CustomException;
+import com.wanted.teamV.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 
@@ -10,7 +12,7 @@ public class AuthorizationExtractor {
     public static String extract(HttpServletRequest request) {
         String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authorizationHeader == null || authorizationHeader.isBlank()) {
-            System.out.println("No Token Header");
+            throw new CustomException(ErrorCode.EMPTY_AUTHORIZATION_HEADER);
         }
 
         validateAuthorizationFormat(authorizationHeader);
@@ -19,7 +21,7 @@ public class AuthorizationExtractor {
 
     public static void validateAuthorizationFormat(String authorizationHeader) {
         if (!authorizationHeader.toLowerCase().startsWith(BEARER_TYPE.toLowerCase())) {
-            System.out.println("Invalid Token");
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
     }
 }

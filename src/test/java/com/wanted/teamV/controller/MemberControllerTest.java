@@ -5,6 +5,8 @@ import com.wanted.teamV.dto.req.MemberJoinReqDto;
 import com.wanted.teamV.dto.req.MemberLoginReqDto;
 import com.wanted.teamV.dto.res.MemberTokenResDto;
 import com.wanted.teamV.entity.Member;
+import com.wanted.teamV.exception.CustomException;
+import com.wanted.teamV.exception.ErrorCode;
 import com.wanted.teamV.service.MemberService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -54,7 +56,7 @@ public class MemberControllerTest {
         //given
         MemberJoinReqDto request = new MemberJoinReqDto("test1234", "test1234!@@#$");
 
-        doThrow(new RuntimeException()).when(memberService).join(request);
+        doThrow(new CustomException(ErrorCode.DUPLICATE_ACCOUNT)).when(memberService).join(request);
 
         //when & then
         mockMvc.perform(post("/members")
@@ -103,7 +105,7 @@ public class MemberControllerTest {
         MemberLoginReqDto request = new MemberLoginReqDto("test1234", "wrongPassword");
         Member member = new Member("test12", "encryptedPassword");
 
-        when(memberService.login(request)).thenThrow(new RuntimeException());
+        when(memberService.login(request)).thenThrow(new CustomException(ErrorCode.INVALID_PASSWORD));
 
         //when & then
         mockMvc.perform(post("/members/login")
