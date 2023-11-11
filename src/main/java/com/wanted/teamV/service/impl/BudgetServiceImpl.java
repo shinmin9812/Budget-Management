@@ -35,8 +35,8 @@ public class BudgetServiceImpl implements BudgetService {
             budgetRepository.updateBudget(budget.getMember().getId(), budget.getCategory().getId(), money);
             response = BudgetInfoResDto.builder()
                     .id(budget.getId())
-                    .member(budget.getMember())
-                    .category(budget.getCategory())
+                    .member(budget.getMember().getAccount())
+                    .category(budget.getCategory().getName())
                     .budget(money)
                     .build();
 
@@ -51,8 +51,8 @@ public class BudgetServiceImpl implements BudgetService {
 
             response = BudgetInfoResDto.builder()
                     .id(newBudget.getId())
-                    .member(newBudget.getMember())
-                    .category(newBudget.getCategory())
+                    .member(newBudget.getMember().getAccount())
+                    .category(newBudget.getCategory().getName())
                     .budget(newBudget.getBudget())
                     .build();
         }
