@@ -65,8 +65,8 @@ public class BudgetServiceImpl implements BudgetService {
     }
 
     @Override
-    public Map<String, Double> recommendBudgets(Long memberId, int money) {
-        Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+    public Map<String, Double> recommendBudgets(int money) {
+        //Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
         List<Member> memberList = memberRepository.findAll();
 
         Map<String, Double> averageRatios = calculateAverageRatios(memberList);
