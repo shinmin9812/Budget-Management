@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/budgets")
@@ -23,5 +25,14 @@ public class BudgetController {
     ) {
         BudgetInfoResDto response = budgetService.updateBudget(request.categoryId(), loginMember.id(), request.budget());
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/recommend")
+    public ResponseEntity<Map<String, Double>> recommendBudgets(
+            @AuthenticationPrincipal LoginMember loginMember,
+            @RequestParam(name = "budget") int money
+    ) {
+        Map<String, Double> recommendBudgets = budgetService.recommendBudgets(loginMember.id(), money);
+        return ResponseEntity.ok().body(recommendBudgets);
     }
 }

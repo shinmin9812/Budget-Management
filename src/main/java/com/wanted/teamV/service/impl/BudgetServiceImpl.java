@@ -14,6 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -60,4 +64,79 @@ public class BudgetServiceImpl implements BudgetService {
         return response;
     }
 
+    @Override
+    public Map<String, Double> recommendBudgets(Long memberId, int money) {
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+        List<Member> memberList = memberRepository.findAll();
+
+        Map<String, Double> averageRatios = calculateAverageRatios(memberList);
+
+        Map<String, Double> result = new HashMap<>();
+        Double balance = 0.0;
+
+        result.put("총액", Double.valueOf(money));
+
+        for (Map.Entry<String, Double> entry : averageRatios.entrySet()) {
+            String category = entry.getKey();
+            Double avgRatio = entry.getValue();
+
+            Double recommendBudget = avgRatio * money;
+
+            recommendBudget = Math.floor(recommendBudget / 100) * 100;
+            balance += recommendBudget;
+            result.put(category, recommendBudget);
+        }
+
+        result.put("잔액", Double.valueOf(money) - balance);
+
+        return result;
+    }
+
+    private Map<Member, Map<String, Double>> getCategoriesRatioByMember(Long memberId) {
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+
+        List<Budget> memberBudgets = budgetRepository.getBudgetsByMemberId(memberId);
+        if (memberBudgets.isEmpty()) {
+            throw new CustomException(ErrorCode.NO_BUDGET_FOUND);
+        }
+
+        Double totalBudget = budgetRepository.getSumByMemberId(memberId);
+        if (totalBudget == 0.0) {
+            throw new CustomException(ErrorCode.ZERO_TOTAL_BUDGET);
+        }
+
+        Map<String, Double> ratios = new HashMap<>();
+        Double etcRatio = 0.0;
+
+        for (Budget b : memberBudgets) {
+            Double ratio = b.getBudget() / totalBudget;
+
+            if (ratio < 0.1) {
+                etcRatio += ratio;
+            } else {
+                ratios.put(b.getCategory().getName(), b.getBudget() / totalBudget);
+            }
+        }
+
+        ratios.put("기타", etcRatio);
+
+        Map<Member, Map<String, Double>> result = new HashMap<>();
+        result.put(member, ratios);
+
+        return result;
+    }
+
+    private Map<String, Double> calculateAverageRatios(List<Member> memberList) {
+        Map<String, Double> averageRatios = new HashMap<>();
+
+        for (Member m : memberList) {
+            Map<String, Double> ratios = getCategoriesRatioByMember(m.getId()).get(m);
+
+            ratios.forEach((category, ratio) ->
+                    averageRatios.merge(category, ratio, Double::sum));
+        }
+
+        averageRatios.replaceAll((category, totalRatio) -> totalRatio / memberList.size());
+        return averageRatios;
+    }
 }
