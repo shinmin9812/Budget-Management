@@ -16,10 +16,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,7 +64,6 @@ public class BudgetServiceImplTest {
         BudgetInfoResDto result = budgetService.updateBudget(categoryId, memberId, money);
 
         //then
-        //System.out.println(result);
         assertNotNull(result);
     }
 
@@ -76,10 +78,11 @@ public class BudgetServiceImplTest {
                 .name("식품")
                 .build();
 
+        //when
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
         when(memberRepository.findById(memberId)).thenThrow(new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
-        //when & then
+        //then
         assertThrows(CustomException.class, () -> budgetService.updateBudget(categoryId, memberId, money));
     }
 
@@ -90,10 +93,10 @@ public class BudgetServiceImplTest {
         Long categoryId = 999L, memberId = 1L;
         int money = 40000;
 
+        //when
         when(categoryRepository.findById(categoryId)).thenThrow(new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        //when & then
+        //then
         assertThrows(CustomException.class, () -> budgetService.updateBudget(categoryId, memberId, money));
     }
-
 }

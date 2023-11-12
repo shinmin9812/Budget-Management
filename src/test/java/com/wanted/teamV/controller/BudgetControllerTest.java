@@ -5,16 +5,10 @@ import com.jayway.jsonpath.JsonPath;
 import com.wanted.teamV.dto.req.BudgetUpdateReqDto;
 import com.wanted.teamV.dto.req.MemberJoinReqDto;
 import com.wanted.teamV.dto.req.MemberLoginReqDto;
-import com.wanted.teamV.dto.res.BudgetInfoResDto;
-import com.wanted.teamV.entity.Budget;
-import com.wanted.teamV.entity.Category;
-import com.wanted.teamV.entity.Member;
-import com.wanted.teamV.repository.BudgetRepository;
 import com.wanted.teamV.service.BudgetService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,6 +18,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -41,9 +41,6 @@ public class BudgetControllerTest {
 
     @MockBean
     private BudgetService budgetService;
-
-    @Mock
-    private BudgetRepository budgetRepository;
 
     private String token;
 
@@ -85,6 +82,28 @@ public class BudgetControllerTest {
                         .header("Authorization", "Bearer " + token)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("예산 추천 - 성공")
+    public void recommendBudgets() throws Exception {
+        //given
+        Map<String, Double> recommendBudgets = new HashMap<>();
+        recommendBudgets.put("식품", 40000.0);
+        recommendBudgets.put("교통", 30000.0);
+        recommendBudgets.put("기타", 30000.0);
+
+        when(budgetService.recommendBudgets(anyInt())).thenReturn(recommendBudgets);
+
+        //when & then
+        mockMvc.perform(get("/budgets/recommend")
+                        .header("Authorization", "Bearer " + token)
+                        .param("budget", "100000"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.식품").value(40000.0))
+                .andExpect(jsonPath("$.교통").value(30000.0))
+                .andExpect(jsonPath("$.기타").value(30000.0))
                 .andDo(print());
     }
 }
