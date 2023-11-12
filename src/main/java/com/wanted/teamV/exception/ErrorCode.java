@@ -11,6 +11,9 @@ public enum ErrorCode {
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "잘못된 토큰입니다."),
     EMPTY_AUTHORIZATION_HEADER(HttpStatus.BAD_REQUEST, "인증헤더가 비어있습니다."),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
+    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다."),
+    NO_BUDGET_FOUND(HttpStatus.NOT_FOUND, "예산 목록을 찾을 수 없습니다."),
+    ZERO_TOTAL_BUDGET(HttpStatus.BAD_REQUEST, "총 예산이 0원입니다."),
     ;
 
     private final HttpStatus status;
