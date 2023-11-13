@@ -35,6 +35,9 @@ public class Spend {
     String memo;
 
     @Column(nullable = false)
+    Boolean isExcluded = false;
+
+    @Column(nullable = false)
     @CreatedDate
     LocalDateTime date;
 
@@ -44,6 +47,15 @@ public class Spend {
         this.category = category;
         this.amount = amount;
         this.memo = memo;
+        this.date = date;
+    }
+
+    public Spend(Member member, Category category, int amount, String memo, Boolean isExcluded, LocalDateTime date) {
+        this.member = member;
+        this.category = category;
+        this.amount = amount;
+        this.memo = memo;
+        this.isExcluded = isExcluded;
         this.date = date;
     }
 }
