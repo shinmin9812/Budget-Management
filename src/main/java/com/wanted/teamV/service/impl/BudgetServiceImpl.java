@@ -31,6 +31,7 @@ public class BudgetServiceImpl implements BudgetService {
     public BudgetInfoResDto updateBudget(Long categoryId, Long memberId, int money) {
         Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
         Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+        if (money < 0) throw new CustomException(ErrorCode.INVALID_MONEY);
         Budget budget = budgetRepository.findByMemberIdAndCategoryId(memberId, categoryId);
 
         BudgetInfoResDto response;
@@ -66,7 +67,8 @@ public class BudgetServiceImpl implements BudgetService {
 
     @Override
     public Map<String, Double> recommendBudgets(int money) {
-        //Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+        if(money <= 0) throw new CustomException(ErrorCode.INVALID_MONEY);
+
         List<Member> memberList = memberRepository.findAll();
 
         Map<String, Double> averageRatios = calculateAverageRatios(memberList);

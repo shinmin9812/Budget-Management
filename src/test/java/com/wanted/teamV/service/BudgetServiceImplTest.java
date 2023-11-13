@@ -83,7 +83,8 @@ public class BudgetServiceImplTest {
         when(memberRepository.findById(memberId)).thenThrow(new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
         //then
-        assertThrows(CustomException.class, () -> budgetService.updateBudget(categoryId, memberId, money));
+        CustomException exception = assertThrows(CustomException.class, () -> budgetService.updateBudget(categoryId, memberId, money));
+        assertEquals(ErrorCode.MEMBER_NOT_FOUND, exception.getErrorCode());
     }
 
     @Test
@@ -97,6 +98,31 @@ public class BudgetServiceImplTest {
         when(categoryRepository.findById(categoryId)).thenThrow(new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
 
         //then
-        assertThrows(CustomException.class, () -> budgetService.updateBudget(categoryId, memberId, money));
+        CustomException exception = assertThrows(CustomException.class, () -> budgetService.updateBudget(categoryId, memberId, money));
+        assertEquals(ErrorCode.CATEGORY_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("예산 설정 - 실패(예산이 잘못된 경우)")
+    public void updateBudget_invalid_money() throws Exception {
+        //given
+        Long categoryId = 1L, memberId = 1L;
+        int invalidMoney = -40000;
+
+        Category category = Category.builder()
+                .name("식품")
+                .build();
+
+        Member member = Member.builder()
+                .account("test")
+                .password("test1234!@#$")
+                .build();
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+        when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
+
+        //then
+        CustomException exception = assertThrows(CustomException.class, () -> budgetService.updateBudget(categoryId, memberId, invalidMoney));
+        assertEquals(ErrorCode.INVALID_MONEY, exception.getErrorCode());
     }
 }
