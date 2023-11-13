@@ -32,7 +32,7 @@ public class BudgetController {
             @AuthenticationPrincipal LoginMember loginMember,
             @RequestParam(name = "budget") int money
     ) {
-        Map<String, Double> recommendBudgets = budgetService.recommendBudgets(loginMember.id(), money);
+        Map<String, Double> recommendBudgets = budgetService.recommendBudgets(money);
         return ResponseEntity.ok().body(recommendBudgets);
     }
 }
