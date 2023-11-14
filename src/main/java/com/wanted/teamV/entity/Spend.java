@@ -46,14 +46,4 @@ public class Spend {
         this.memo = memo;
         this.date = date;
     }
-
-    public Spend(Long id, Member member, Category category, int amount, String memo, Boolean isExcluded, LocalDateTime date) {
-        this.id = id;
-        this.member = member;
-        this.category = category;
-        this.amount = amount;
-        this.memo = memo;
-        this.isExcluded = isExcluded;
-        this.date = date;
-    }
 }

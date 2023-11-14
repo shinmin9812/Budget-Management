@@ -32,11 +32,4 @@ public class Budget {
         this.category = category;
         this.budget = budget;
     }
-
-    public Budget(Long id, Member member, Category category, int budget) {
-        this.id = id;
-        this.member = member;
-        this.category = category;
-        this.budget = budget;
-    }
 }

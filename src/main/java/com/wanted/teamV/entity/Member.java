@@ -26,10 +26,4 @@ public class Member {
         this.account = account;
         this.password = password;
     }
-
-    public Member(Long id, String account, String password) {
-        this.id = id;
-        this.account = account;
-        this.password = password;
-    }
 }
