@@ -35,14 +35,14 @@ public class SpendServiceImpl implements SpendService {
     @Override
     public SpendInfoResDto createSpend(Long memberId, SpendCreateReqDto createReqDto) {
         Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
-        Category category = categoryRepository.findById(createReqDto.categoryId()).orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
+        Category category = categoryRepository.findById(createReqDto.getCategoryId()).orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
 
         Spend spend = Spend.builder()
                 .member(member)
                 .category(category)
-                .amount(createReqDto.amount())
-                .memo(createReqDto.memo())
-                .date(createReqDto.date())
+                .amount(createReqDto.getAmount())
+                .memo(createReqDto.getMemo())
+                .date(createReqDto.getDate())
                 .build();
 
         spendRepository.save(spend);
@@ -61,20 +61,20 @@ public class SpendServiceImpl implements SpendService {
     public SpendInfoResDto updateSpend(Long memberId, Long spendId, SpendUpdateReqDto updateReqDto) {
         Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
         Spend spend = spendRepository.findById(spendId).orElseThrow(() -> new CustomException(ErrorCode.SPEND_NOT_FOUND));
-        Category category = categoryRepository.findById(updateReqDto.categoryId()).orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
+        Category category = categoryRepository.findById(updateReqDto.getCategoryId()).orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
 
         if (spend.getMember().getId() != memberId) throw new CustomException(ErrorCode.NO_AUTHORIZATION);
 
-        spendRepository.updateSpend(memberId, spendId, updateReqDto.categoryId(), updateReqDto.amount(), updateReqDto.memo(),
-                updateReqDto.date(), updateReqDto.isExcluded());
+        spendRepository.updateSpend(memberId, spendId, updateReqDto.getCategoryId(), updateReqDto.getAmount(), updateReqDto.getMemo(),
+                updateReqDto.getDate(), updateReqDto.getIsExcluded());
 
         return SpendInfoResDto.builder()
                 .member(member.getAccount())
                 .category(category.getName())
-                .amount(updateReqDto.amount())
-                .memo(updateReqDto.memo())
-                .date(updateReqDto.date())
-                .isExcluded(updateReqDto.isExcluded())
+                .amount(updateReqDto.getAmount())
+                .memo(updateReqDto.getMemo())
+                .date(updateReqDto.getDate())
+                .isExcluded(updateReqDto.getIsExcluded())
                 .build();
     }
 
