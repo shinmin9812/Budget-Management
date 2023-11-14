@@ -15,6 +15,10 @@ public enum ErrorCode {
     NO_BUDGET_FOUND(HttpStatus.NOT_FOUND, "예산 목록을 찾을 수 없습니다."),
     ZERO_TOTAL_BUDGET(HttpStatus.BAD_REQUEST, "총 예산이 0원입니다."),
     INVALID_MONEY(HttpStatus.BAD_REQUEST, "잘못된 예산 형식입니다."),
+    SPEND_NOT_FOUND(HttpStatus.NOT_FOUND, "지출 내역을 찾을 수 없습니다."),
+    NO_AUTHORIZATION(HttpStatus.FORBIDDEN, "사용 권한이 없습니다."),
+    INVALID_AMOUNT_RANGE(HttpStatus.BAD_REQUEST, "최소 또는 최대 금액이 비어있습니다."),
+    INVALID_MIN_AMOUNT(HttpStatus.BAD_REQUEST, "최소 금액이 0원 미만입니다."),
     ;
 
     private final HttpStatus status;
