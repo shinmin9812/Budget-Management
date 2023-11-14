@@ -33,7 +33,7 @@ public class Spend {
     String memo;
 
     @Column(nullable = false)
-    Boolean isExcluded = false;
+    Boolean isExcluded = true;
 
     @Column(nullable = false)
     LocalDateTime date;
