@@ -2,6 +2,7 @@ package com.wanted.teamV.controller;
 
 import com.wanted.teamV.component.AuthenticationPrincipal;
 import com.wanted.teamV.dto.LoginMember;
+import com.wanted.teamV.dto.res.TodayAmountInfoResDto;
 import com.wanted.teamV.dto.res.TodayRecommendResDto;
 import com.wanted.teamV.service.ConsultingService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,14 @@ public class ConsultingController {
             @AuthenticationPrincipal LoginMember loginMember
     ) {
         TodayRecommendResDto response = consultingService.recommendTodaySpend(loginMember.id());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/today-spend")
+    public ResponseEntity<TodayAmountInfoResDto> getTodaySpend(
+            @AuthenticationPrincipal LoginMember loginMember
+    ) {
+        TodayAmountInfoResDto response = consultingService.getTodaySpend(loginMember.id());
         return ResponseEntity.ok(response);
     }
 }

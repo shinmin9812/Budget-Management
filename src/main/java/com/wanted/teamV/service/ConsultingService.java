@@ -7,5 +7,5 @@ public interface ConsultingService {
 
     TodayRecommendResDto recommendTodaySpend(Long memberId);
 
-    TodayAmountInfoResDto getTodaySpend();
+    TodayAmountInfoResDto getTodaySpend(Long memberId);
 }

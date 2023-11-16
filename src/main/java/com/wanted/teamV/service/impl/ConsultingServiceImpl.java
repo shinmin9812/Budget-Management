@@ -8,7 +8,6 @@ import com.wanted.teamV.entity.Spend;
 import com.wanted.teamV.exception.CustomException;
 import com.wanted.teamV.exception.ErrorCode;
 import com.wanted.teamV.repository.BudgetRepository;
-import com.wanted.teamV.repository.CategoryRepository;
 import com.wanted.teamV.repository.MemberRepository;
 import com.wanted.teamV.repository.SpendRepository;
 import com.wanted.teamV.service.ConsultingService;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,11 +31,14 @@ public class ConsultingServiceImpl implements ConsultingService {
     private final MemberRepository memberRepository;
     private final BudgetRepository budgetRepository;
     private final SpendRepository spendRepository;
-    private final SpendServiceImpl spendService;
 
     @Override
     public TodayRecommendResDto recommendTodaySpend(Long memberId) {
         Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+
+        LocalDateTime today = LocalDateTime.now();
+        int day = today.getDayOfMonth(), lastDay = today.toLocalDate().lengthOfMonth();
+        int remainDays = lastDay - day;
 
         Double monthlyBudget = budgetRepository.getSumByMemberId(memberId);
         List<Budget> budgetList = budgetRepository.getBudgetsByMemberId(memberId);
@@ -43,21 +46,17 @@ public class ConsultingServiceImpl implements ConsultingService {
                 .collect(Collectors.groupingBy(budget -> budget.getCategory().getName(),
                         Collectors.summingDouble(Budget::getBudget)));
 
-        LocalDateTime today = LocalDateTime.now();
-        int day = today.getDayOfMonth(), lastDay = today.toLocalDate().lengthOfMonth();
-        int remainDays = lastDay - day;
-
-        List<Spend> monthlySpendsBeforeToday = getSpendsUntilToday(memberId, today);
-        Map<String, Double> categorySpend = monthlySpendsBeforeToday.stream()
-                .collect(Collectors.groupingBy(spend -> spend.getCategory().getName(),
-                        Collectors.summingDouble(Spend::getAmount)));
-
-        Double allSpends = monthlySpendsBeforeToday.stream()
+        List<Spend> monthlySpendsUntilToday = getSpendsUntilToday(memberId, today);
+        Double spendUntilYesterday = monthlySpendsUntilToday.stream()
                 .mapToDouble(Spend::getAmount)
                 .sum();
 
+        Map<String, Double> categorySpend = monthlySpendsUntilToday.stream()
+                .collect(Collectors.groupingBy(spend -> spend.getCategory().getName(),
+                        Collectors.summingDouble(Spend::getAmount)));
+
         //TodayRecommendResDto -> availableTodaySpend
-        Double availableTotalSpend = monthlyBudget - allSpends;
+        Double availableTotalSpend = monthlyBudget - spendUntilYesterday;
         double dailyTodaySpend = Math.round((availableTotalSpend / remainDays) / 100.0) * 100.0;
 
         //TodayRecommendResDto -> categoryAmount
@@ -69,17 +68,15 @@ public class ConsultingServiceImpl implements ConsultingService {
             Double spendAmount = categorySpend.getOrDefault(category, 0.0);
 
             Double remainingAmount = budgetAmount - spendAmount;
-            if (remainingAmount <= 0.0) remainingAmount = 10000.0;
             double dailySpend = Math.round((remainingAmount / remainDays) / 100.0) * 100.0;
+            if (dailySpend <= 0.0) dailySpend = 10000.0;
             categoryAmount.put(category, dailySpend);
         }
 
         //TodayRecommendResDto -> sentence
         RecommendSentence sentence = RecommendSentence.NORMAL;
-        Double ratio = allSpends / monthlyBudget;
-        System.out.println(allSpends);
-        System.out.println(monthlyBudget);
-        System.out.println(ratio);
+        Double ratio = spendUntilYesterday / monthlyBudget;
+
         if (ratio < 0.05) {
             sentence = RecommendSentence.EXCELLENT;
         } else if (ratio >= 0.05 && ratio < 0.3) {
@@ -100,8 +97,53 @@ public class ConsultingServiceImpl implements ConsultingService {
     }
 
     @Override
-    public TodayAmountInfoResDto getTodaySpend() {
-        return null;
+    public TodayAmountInfoResDto getTodaySpend(Long memberId) {
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+
+        LocalDateTime todayStart = LocalDateTime.now().with(LocalTime.MIN);
+        LocalDateTime todayEnd = LocalDateTime.now().with(LocalTime.MAX);
+
+        //TodayAmountInfoResDto -> categoryTotal, allSpendsTotal
+        List<Spend> todaySpends = spendRepository.findSpendsByDateBetween(memberId, todayStart, todayEnd);
+
+        Double todayTotalSpends = todaySpends.stream()
+                .mapToDouble(Spend::getAmount)
+                .sum();
+
+        Map<String, Double> todaySpendByCategory = todaySpends.stream()
+                .collect(Collectors.groupingBy(spend -> spend.getCategory().getName(),
+                        Collectors.summingDouble(Spend::getAmount)));
+
+        //TodayAmountInfoResDto -> risk
+        List<Budget> budgetList = budgetRepository.getBudgetsByMemberId(memberId);
+
+        Map<String, Double> monthlyBudgetByCategory = budgetList.stream()
+                .collect(Collectors.groupingBy(budget -> budget.getCategory().getName(),
+                        Collectors.summingDouble(Budget::getBudget)));
+
+        Map<String, Double> riskPercentageByCategory = new HashMap<>();
+
+        for (Map.Entry<String, Double> entry : monthlyBudgetByCategory.entrySet()) {
+            String category = entry.getKey();
+            Double monthlyBudget = entry.getValue();
+            Double dailyBudget = monthlyBudget / todayStart.toLocalDate().lengthOfMonth();
+
+            Double spendForCategory = todaySpends.stream()
+                    .filter(spend -> spend.getCategory().getName().equals(category))
+                    .mapToDouble(Spend::getAmount)
+                    .sum();
+
+            Double difference = (spendForCategory - dailyBudget) / dailyBudget * 100;
+            difference = Math.max(0.0, Math.round(difference * 100.0) / 100.0);
+
+            riskPercentageByCategory.put(category, difference);
+        }
+
+        return TodayAmountInfoResDto.builder()
+                .todaySpendByCategory(todaySpendByCategory)
+                .todayAllSpends(todayTotalSpends)
+                .riskPercentageByCategory(riskPercentageByCategory)
+                .build();
     }
 
     private List<Spend> getSpendsUntilToday(Long memberId, LocalDateTime today) {
