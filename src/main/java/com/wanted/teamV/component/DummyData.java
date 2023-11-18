@@ -8,6 +8,7 @@ import com.wanted.teamV.repository.MemberRepository;
 import com.wanted.teamV.repository.SpendRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ import java.util.Random;
 
 @Component
 @RequiredArgsConstructor
+@Profile("test-data")
 public class DummyData {
 
     private final MemberRepository memberRepository;
